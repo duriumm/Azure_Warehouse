@@ -2,9 +2,7 @@
 
 ## Description
 Inventory system too keep track of hur much stock we have left in our warehouse.
-
 Used through the command line interface.
-
 The data is located in an Azure table storage which we can update as we please
 
 Every start on the application will reset the balance of invetory to 0

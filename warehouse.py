@@ -1,11 +1,6 @@
-import json
-import requests
-import xmltodict
 from azure.data.tables import TableServiceClient
-from azure.data.tables import TableClient
 from azure.data.tables import UpdateMode
 import os
-
 
 MY_TABLE_NAME = "WarehouseTable"
 MY_PARTITION_KEY = "Warehouse"
@@ -22,9 +17,16 @@ def get_item_balance_from_warehouse(table_client):
   return got_entity["Item_Balance"]
 
 def add_items_to_warehouse_stock(table_client, amount_to_add):
+  current_warehouse_balance = get_item_balance_from_warehouse(table_client) 
   entity_to_add = {"PartitionKey": MY_PARTITION_KEY, "RowKey": MY_ROW_KEY, "Item_Balance": get_item_balance_from_warehouse(table_client) + amount_to_add}
   table_client.update_entity(mode=UpdateMode.REPLACE, entity=entity_to_add)  
-  
+
+  current_warehouse_balance_after_addition = get_item_balance_from_warehouse(table_client) 
+  if current_warehouse_balance_after_addition != current_warehouse_balance:
+    return True
+
+  return False
+
 def remove_items_from_warehouse_stock(table_client, amount_to_remove):
   current_warehouse_balance = get_item_balance_from_warehouse(table_client) 
   if current_warehouse_balance - amount_to_remove < 0:
@@ -34,8 +36,11 @@ def remove_items_from_warehouse_stock(table_client, amount_to_remove):
     entity_to_add = {"PartitionKey": MY_PARTITION_KEY, "RowKey": MY_ROW_KEY, "Item_Balance": current_warehouse_balance - amount_to_remove}
   
   table_client.update_entity(mode=UpdateMode.REPLACE, entity=entity_to_add)  
+  current_warehouse_balance_after_removal = get_item_balance_from_warehouse(table_client) 
+  if current_warehouse_balance_after_removal != current_warehouse_balance:
+    return True
 
-
+  return False
 
 def main():
   service = TableServiceClient(endpoint=MY_ENDPOINT)
@@ -43,8 +48,6 @@ def main():
   initialize_warehouse_balance_to_zero(table_client)
 
   while True:
-    
-
     print("Welcome to the W.I.S. - Warehouse Inventory System")
     print("These are the available commands you can use: \n")
     print("1. Adding items   ---------------------- -- Example usage: 'Add 5' to add five items to stock")
@@ -52,22 +55,23 @@ def main():
     print("3. Show current amount of items in stock -- Example usage: 'Balance' to show stock amount")
     print("4. Exit Warehouse Inventory System ----- -- Example usage: 'Exit' to Exit the system")
 
-    print("Enter your choice below")
+    print("Enter your choice below\n")
 
     user_input = input().lower()
+    clear()
 
     print("----------------------------------------------------------------------------------\n")
-    print(f"User input was: {user_input}")
     splitted_user_input = user_input.split()
-    print(f"Splitted User input was: {splitted_user_input}")
+
     if len(splitted_user_input) > 2:
       print("Invalid input, list len > 2 - try again")
     elif len(splitted_user_input) == 1:
       if splitted_user_input[0] == "balance":
-        print("Trying to show warehouse balance")
         print(f"Warehouse item balance: {get_item_balance_from_warehouse(table_client)}")
       elif splitted_user_input[0] == "exit":
         return
+      else:
+        print("Invalid input")
     elif len(splitted_user_input) == 2:
       try: 
         splitted_user_input[1] = int(splitted_user_input[1])
@@ -77,12 +81,15 @@ def main():
         print("Invalid input, try again")
 
       if splitted_user_input[0] == "add":
-        print("Trying to add items to warehouse")
-        add_items_to_warehouse_stock(table_client, splitted_user_input[1])
-
+        if add_items_to_warehouse_stock(table_client, splitted_user_input[1]):
+          print(f"Added {splitted_user_input[1]} item/s to warehouse successfully!")
+        else:
+          print(f"Something went wrong and we could not add the items")
       elif splitted_user_input[0] == "remove":
-        print("Trying to remove items from warehouse")
         remove_items_from_warehouse_stock(table_client, splitted_user_input[1])
+        print(f"Removed {splitted_user_input[1]} item/s from warehouse")
+      else:
+        print("Invalid input")
 
     print("Press any key to continue or type 'exit' to close application")
     user_input = input().lower()

@@ -2,10 +2,6 @@ from azure.data.tables import TableServiceClient
 from azure.data.tables import UpdateMode
 import os
 
-MY_TABLE_NAME = "WarehouseTable"
-MY_PARTITION_KEY = "Warehouse"
-MY_ROW_KEY = ""
-MY_ENDPOINT = "https://lassesstorageaccount.table.core.windows.net/?sv=2021-06-08&ss=bfqt&srt=sco&sp=rwdlacupiytfx&se=2022-12-01T00:44:48Z&st=2022-09-02T15:44:48Z&spr=https&sig=vgvmtB5Ey%2BCSEAmCCFx8zLH17eRFrqlfUUBGFFPBn5E%3D"
 clear = lambda: os.system('cls')
 clear()
 

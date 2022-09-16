@@ -7,6 +7,8 @@ The data is located in an Azure table storage which we can update as we please
 
 Every start on the application will reset the balance of invetory to 0
 
+
+
 ### How to run
 1. Open warehouse.py and run it
 2. Enter any of the example commands shown below
@@ -21,6 +23,7 @@ To continue development on this tool or to run it you need these installs below
 pip install azure-data-tables
 pip install requests
 ```
+Find keys etc in oneNote azure
 
 ### Connected resources
 Azure table storage with one table named WarehouseTable
